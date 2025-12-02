@@ -1,0 +1,37 @@
+# docker-compose.yml
+services:
+  dev-youtu-agent:
+    build:
+      context: ..
+      dockerfile: .devcontainer/dockerfile
+    volumes:
+      - ../:/workspace:cached
+    command: sleep infinity
+    networks:
+      - phoenix-network
+    # 可选：设置环境变量
+    environment:
+      - PHOENIX_ENDPOINT=http://phoenix:6006/v1/traces
+      # - PHOENIX_GRPC_ENDPOINT=http://phoenix:4317
+
+  phoenix:
+    image: arizephoenix/phoenix:latest # Must be greater than 4.0 version to work
+    # network_mode: "host"
+    ports:
+      - 6006:6006  # PHOENIX_PORT
+      - 4317:4317  # PHOENIX_GRPC_PORT
+      - 9090:9090  # [Optional] PROMETHEUS PORT IF ENABLED
+    environment:
+      - PHOENIX_WORKING_DIR=/mnt/data
+      - PHOENIX_HOST=0.0.0.0
+    volumes:
+      - phoenix_data:/mnt/data   # PHOENIX_WORKING_DIR
+    networks:
+      - phoenix-network
+volumes:
+  phoenix_data:
+    driver: local
+
+networks:
+  phoenix-network:
+    driver: bridge
